@@ -1,0 +1,77 @@
+Sliding-Window CNN for CDI Prediction
+
+Two scripts that train a temporal CNN to classify infants as top or bottom 25% vocabulary scorers at 18 months (CDI), and then visualise which time-series windows the model found most diagnostic.
+
+---
+
+## Scripts
+
+**`train_sliding_window_cv.py`**
+Trains the model under leave-one-out cross-validation (LOO-CV). For each held-out participant the model is trained on the remaining participants, then evaluated on the test participant. Selected slices are saved to a `.pt` file for downstream analysis.
+
+**`analyze_slices.py`**
+Loads the saved slices from the training script and produces per-channel mean time-series plots and heatmaps, split by class and selection method (prob/attr × top/bottom). Outputs CSV files of mean and standard-error values and PNG plots into a specified directory.
+
+---
+
+## Requirements
+
+```
+torch
+numpy
+pandas
+scikit-learn
+captum
+tqdm
+matplotlib
+```
+
+---
+
+## Usage
+
+### Step 1: Train and collect slices
+
+```bash
+python train_sliding_window_cv.py \
+    --data-age 11m \
+    --cdi-path CDI_data_w_18_withimputed.csv \
+    --time-series-dir time_series_data \
+    --window-size 25 \
+    --stride 12 \
+    --epochs 5 \
+    --target-class top
+```
+
+Key arguments:
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--data-age` | required | `11m` or `12m` |
+| `--cdi-path` | `CDI_data_w_18_withimputed.csv` | CSV with `participant` and `us18_imp` columns |
+| `--time-series-dir` | see above | Folder containing `p<id>_<age>.csv` time-series files |
+| `--window-size` | 25 | Sliding window length in time steps |
+| `--stride` | 12 | Step between consecutive windows |
+| `--epochs` | 5 | Training epochs per LOO fold |
+| `--target-class` | `top` | `top` = classify top 25% vs rest; `bottom` = bottom 25% vs rest |
+
+Output: `correct_slices_<age>_<target-class>.pt`
+
+### Step 2: Analyse slices
+
+```bash
+python analyze_slices.py \
+    --slices-file correct_slices_11m_top.pt \
+    --channels-file time_series_data/p13_11m.csv \
+    --out-dir slice_analysis
+```
+
+Key arguments:
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--slices-file` | `correct_slices_11m_top.pt` | Output from Step 1 |
+| `--channels-file` | `p13_11m.csv` | Any participant file used to read channel names |
+| `--out-dir` | `slice_analysis/` | Directory for output plots and CSVs |
+
+---
