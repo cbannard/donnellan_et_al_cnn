@@ -2,6 +2,8 @@ Sliding-Window CNN for CDI Prediction
 
 Two scripts that train a temporal CNN to classify infants as top or bottom 25% vocabulary scorers at 18 months (CDI), and then visualise which time-series windows the model found most diagnostic.
 
+Contributors: Dmitry Nikolaev
+
 ---
 
 ## Scripts
